@@ -17,6 +17,7 @@
 #include <iomanip>
 #include <cerrno>
 #include <cstdint>
+#include <mutex>
 
 namespace canbus {
 
@@ -48,6 +49,8 @@ class CANBus {
 
         static constexpr int DEFAULT_CAN_BUS     = 0;
         static constexpr int DEFAULT_BUFFER_SIZE = 1048576;
+
+        mutable std::mutex mutex_;
 
 };
 

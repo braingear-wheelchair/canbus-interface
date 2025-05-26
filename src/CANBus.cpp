@@ -13,7 +13,7 @@ CANBus::~CANBus(void) {
 }
 
 bool CANBus::is_open(void) {
-
+    std::lock_guard<std::mutex> lock(this->mutex_);
     return this->socket_ >=0 ? true : false;
 }
 
@@ -21,6 +21,8 @@ bool CANBus::open(void) {
 
     if(this->is_open())
         close(this->socket_);
+    
+    std::lock_guard<std::mutex> lock(this->mutex_);
     
     this->socket_ = socket(PF_CAN, SOCK_RAW, CAN_RAW);
 
@@ -154,6 +156,8 @@ bool CANBus::send(const std::string& msg) {
 
 bool CANBus::send(const can_frame& frame) {
 
+    std::lock_guard<std::mutex> lock(this->mutex_);
+
     if(this->is_open() == false) {
         std::cerr << "Cannot send frame: socket not initialized" << std::endl;
         
@@ -200,6 +204,8 @@ bool CANBus::send(const can_frame& frame) {
 }
 
 struct can_frame CANBus::receive(int timeout_ms) {
+
+    std::lock_guard<std::mutex> lock(this->mutex_);
     struct can_frame frame = {0};
 
     if (!this->is_open()) {
@@ -240,6 +246,8 @@ struct can_frame CANBus::receive(int timeout_ms) {
 
 
 void CANBus::flush() {
+
+    std::lock_guard<std::mutex> lock(this->mutex_);
     struct can_frame frame;
     int nbytes;
 
@@ -265,6 +273,8 @@ void CANBus::flush() {
 }
 
 int CANBus::get_socket(void) {
+
+    std::lock_guard<std::mutex> lock(this->mutex_);
     return this->socket_;
 }
 
