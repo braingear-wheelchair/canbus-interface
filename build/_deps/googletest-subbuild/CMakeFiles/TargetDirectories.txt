@@ -1,3 +1,0 @@
-/mnt/data/Codes/canbus-interface/build/_deps/googletest-subbuild/CMakeFiles/googletest-populate.dir
-/mnt/data/Codes/canbus-interface/build/_deps/googletest-subbuild/CMakeFiles/edit_cache.dir
-/mnt/data/Codes/canbus-interface/build/_deps/googletest-subbuild/CMakeFiles/rebuild_cache.dir

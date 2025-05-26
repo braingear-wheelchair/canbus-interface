@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/test_CANBus.dir/tests/test_CANBus.cpp.o -o test_CANBus  -Wl,-rpath,/mnt/data/Codes/canbus-interface/build libcanbus.so lib/libgtest_main.a -pthread lib/libgtest.a 

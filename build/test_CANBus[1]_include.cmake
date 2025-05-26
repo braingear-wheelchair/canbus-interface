@@ -1,5 +1,0 @@
-if(EXISTS "/mnt/data/Codes/canbus-interface/build/test_CANBus[1]_tests.cmake")
-  include("/mnt/data/Codes/canbus-interface/build/test_CANBus[1]_tests.cmake")
-else()
-  add_test(test_CANBus_NOT_BUILT test_CANBus_NOT_BUILT)
-endif()

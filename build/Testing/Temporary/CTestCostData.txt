@@ -1,7 +1,0 @@
-CANBusTest.OpenSocket 0 0
-CANBusTest.SendMessage 0 0
-CANBusTest.ToFrameAndToString 0 0
----
-CANBusTest.OpenSocket
-CANBusTest.SendMessage
-CANBusTest.ToFrameAndToString

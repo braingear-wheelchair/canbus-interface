@@ -1,7 +1,0 @@
-add_test([=[CANBusTest.OpenSocket]=]  /mnt/data/Codes/canbus-interface/build/test_CANBus [==[--gtest_filter=CANBusTest.OpenSocket]==] --gtest_also_run_disabled_tests)
-set_tests_properties([=[CANBusTest.OpenSocket]=]  PROPERTIES WORKING_DIRECTORY /mnt/data/Codes/canbus-interface/build SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
-add_test([=[CANBusTest.SendMessage]=]  /mnt/data/Codes/canbus-interface/build/test_CANBus [==[--gtest_filter=CANBusTest.SendMessage]==] --gtest_also_run_disabled_tests)
-set_tests_properties([=[CANBusTest.SendMessage]=]  PROPERTIES WORKING_DIRECTORY /mnt/data/Codes/canbus-interface/build SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
-add_test([=[CANBusTest.ToFrameAndToString]=]  /mnt/data/Codes/canbus-interface/build/test_CANBus [==[--gtest_filter=CANBusTest.ToFrameAndToString]==] --gtest_also_run_disabled_tests)
-set_tests_properties([=[CANBusTest.ToFrameAndToString]=]  PROPERTIES WORKING_DIRECTORY /mnt/data/Codes/canbus-interface/build SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
-set(  test_CANBus_TESTS CANBusTest.OpenSocket CANBusTest.SendMessage CANBusTest.ToFrameAndToString)
