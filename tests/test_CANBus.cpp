@@ -15,7 +15,7 @@ TEST(CANBusTest, SendMessage) {
 TEST(CANBusTest, ToFrameAndToString) {
     canbus::CANBus can;
     std::string msg = "123#DEADBEEF";
-    struct can_frame frame = can.toframe(msg);
-    std::string result = can.tostring(frame);
+    struct can_frame frame = canbus::toframe(msg);
+    std::string result = canbus::tostring(frame);
     EXPECT_EQ(msg, result);
 }

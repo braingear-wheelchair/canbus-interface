@@ -13,7 +13,7 @@ CANBus::~CANBus(void) {
 }
 
 bool CANBus::is_open(void) {
-    std::lock_guard<std::mutex> lock(this->mutex_);
+    //std::lock_guard<std::mutex> lock(this->mutex_);
     return this->socket_ >=0 ? true : false;
 }
 
@@ -22,7 +22,7 @@ bool CANBus::open(void) {
     if(this->is_open())
         close(this->socket_);
     
-    std::lock_guard<std::mutex> lock(this->mutex_);
+    //std::lock_guard<std::mutex> lock(this->mutex_);
     
     this->socket_ = socket(PF_CAN, SOCK_RAW, CAN_RAW);
 
@@ -69,7 +69,139 @@ bool CANBus::open(void) {
     return true;
 }
 
-struct can_frame CANBus::toframe(const std::string& msg) const {
+
+bool CANBus::send(const std::string& msg) {
+
+    return this->send(canbus::toframe(msg));
+
+}
+
+bool CANBus::send(const can_frame& frame) {
+
+    //std::lock_guard<std::mutex> lock(this->mutex_);
+
+    if(this->is_open() == false) {
+        std::cerr << "Cannot send frame: socket not initialized" << std::endl;
+        
+        // Try to reopen the socket
+        if (!this->open()) {
+            std::cerr << "Failed to reopen CAN socket" << std::endl;
+            return false;
+        }
+        std::cout << "Successfully reopened CAN socket" << std::endl;
+    }
+
+    try {
+        // Send the frame
+        ssize_t nbytes = write(this->socket_, &frame, sizeof(struct can_frame));
+        
+        if (nbytes != sizeof(struct can_frame)) {
+            std::cerr << "Error sending CAN frame " << canbus::tostring(frame) << ": " << strerror(errno) << std::endl;
+            this->flush();
+            close(this->socket_);
+            this->socket_ = -1;
+            
+            
+            // If the socket is bad, close it and try to reopen
+            if (!this->open()) {
+                std::cerr << "Failed to reopen CAN socket after bad file descriptor" << std::endl;
+                return false;
+            }
+            std::cout << "Successfully reopened CAN socket after bad file descriptor" << std::endl;
+            
+            // Try sending again with the new socket
+            nbytes = write(this->socket_, &frame, sizeof(struct can_frame));
+            if (nbytes != sizeof(struct can_frame)) {
+                std::cerr << "Error sending CAN frame after socket reopen: " << strerror(errno) << std::endl;
+                return false;
+            }
+        }
+        
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception while sending CAN frame: " << e.what() << std::endl;
+        return false;
+    }
+
+}
+
+struct can_frame CANBus::receive(int timeout_ms) {
+
+    //std::lock_guard<std::mutex> lock(this->mutex_);
+    struct can_frame frame = {0};
+
+    if (!this->is_open()) {
+        throw std::runtime_error("Cannot receive: CAN socket is not open");
+    }
+
+    fd_set read_fds;
+    FD_ZERO(&read_fds);
+    FD_SET(this->socket_, &read_fds);
+
+    struct timeval tv;
+    struct timeval* tv_ptr = nullptr;
+
+    if (timeout_ms >= 0) {
+        tv.tv_sec = timeout_ms / 1000;
+        tv.tv_usec = (timeout_ms % 1000) * 1000;
+        tv_ptr = &tv;
+    }
+
+    int ret = select(this->socket_ + 1, &read_fds, nullptr, nullptr, tv_ptr);
+
+    if (ret < 0) {
+        throw std::runtime_error(std::string("select() error: ") + strerror(errno));
+    } else if (ret == 0) {
+        throw std::runtime_error("CAN receive timeout");
+    }
+
+    ssize_t nbytes = read(this->socket_, &frame, sizeof(struct can_frame));
+    if (nbytes < 0) {
+        throw std::runtime_error(std::string("read() failed: ") + strerror(errno));
+    } else if (nbytes != sizeof(struct can_frame)) {
+        throw std::runtime_error("Incomplete CAN frame received");
+    }
+
+    return frame;
+}
+
+
+
+void CANBus::flush() {
+
+    //std::lock_guard<std::mutex> lock(this->mutex_);
+    struct can_frame frame;
+    int nbytes;
+
+    if (!this->is_open()) return;
+
+    // Set the socket to non-blocking mode temporarily
+    int flags = fcntl(this->socket_, F_GETFL, 0);
+    fcntl(this->socket_, F_SETFL, flags | O_NONBLOCK);
+
+    // Read and discard frames until the buffer is empty
+    while ((nbytes = read(this->socket_, &frame, sizeof(struct can_frame))) > 0) {
+        // Discard the frame
+    }
+
+    // Restore original socket flags
+    fcntl(this->socket_, F_SETFL, flags);
+
+    if (nbytes < 0 && errno != EAGAIN) {
+        std::cerr << "Error flushing CAN buffer: " << strerror(errno) << std::endl;
+    } else {
+        std::cout << "CAN buffer flushed" << std::endl;
+    }
+}
+
+int CANBus::get_socket(void) {
+
+    //std::lock_guard<std::mutex> lock(this->mutex_);
+    return this->socket_;
+}
+
+
+struct can_frame toframe(const std::string& msg) {
 
     struct can_frame frame = {0};  
     
@@ -116,7 +248,7 @@ struct can_frame CANBus::toframe(const std::string& msg) const {
     return frame;
 }
 
-std::string CANBus::tostring(const can_frame& frame) const {
+std::string tostring(const can_frame& frame) {
 
     //Retrieve information about the frame
     uint32_t can_id = frame.can_id & CAN_EFF_MASK;  
@@ -146,136 +278,6 @@ std::string CANBus::tostring(const can_frame& frame) const {
 
     return ss.str();
 
-}
-
-bool CANBus::send(const std::string& msg) {
-
-    return this->send(this->toframe(msg));
-
-}
-
-bool CANBus::send(const can_frame& frame) {
-
-    std::lock_guard<std::mutex> lock(this->mutex_);
-
-    if(this->is_open() == false) {
-        std::cerr << "Cannot send frame: socket not initialized" << std::endl;
-        
-        // Try to reopen the socket
-        if (!this->open()) {
-            std::cerr << "Failed to reopen CAN socket" << std::endl;
-            return false;
-        }
-        std::cout << "Successfully reopened CAN socket" << std::endl;
-    }
-
-    try {
-        // Send the frame
-        ssize_t nbytes = write(this->socket_, &frame, sizeof(struct can_frame));
-        
-        if (nbytes != sizeof(struct can_frame)) {
-            std::cerr << "Error sending CAN frame " << this->tostring(frame) << ": " << strerror(errno) << std::endl;
-            this->flush();
-            close(this->socket_);
-            this->socket_ = -1;
-            
-            
-            // If the socket is bad, close it and try to reopen
-            if (!this->open()) {
-                std::cerr << "Failed to reopen CAN socket after bad file descriptor" << std::endl;
-                return false;
-            }
-            std::cout << "Successfully reopened CAN socket after bad file descriptor" << std::endl;
-            
-            // Try sending again with the new socket
-            nbytes = write(this->socket_, &frame, sizeof(struct can_frame));
-            if (nbytes != sizeof(struct can_frame)) {
-                std::cerr << "Error sending CAN frame after socket reopen: " << strerror(errno) << std::endl;
-                return false;
-            }
-        }
-        
-        return true;
-    } catch (const std::exception& e) {
-        std::cerr << "Exception while sending CAN frame: " << e.what() << std::endl;
-        return false;
-    }
-
-}
-
-struct can_frame CANBus::receive(int timeout_ms) {
-
-    std::lock_guard<std::mutex> lock(this->mutex_);
-    struct can_frame frame = {0};
-
-    if (!this->is_open()) {
-        throw std::runtime_error("Cannot receive: CAN socket is not open");
-    }
-
-    fd_set read_fds;
-    FD_ZERO(&read_fds);
-    FD_SET(this->socket_, &read_fds);
-
-    struct timeval tv;
-    struct timeval* tv_ptr = nullptr;
-
-    if (timeout_ms >= 0) {
-        tv.tv_sec = timeout_ms / 1000;
-        tv.tv_usec = (timeout_ms % 1000) * 1000;
-        tv_ptr = &tv;
-    }
-
-    int ret = select(this->socket_ + 1, &read_fds, nullptr, nullptr, tv_ptr);
-
-    if (ret < 0) {
-        throw std::runtime_error(std::string("select() error: ") + strerror(errno));
-    } else if (ret == 0) {
-        throw std::runtime_error("CAN receive timeout");
-    }
-
-    ssize_t nbytes = read(this->socket_, &frame, sizeof(struct can_frame));
-    if (nbytes < 0) {
-        throw std::runtime_error(std::string("read() failed: ") + strerror(errno));
-    } else if (nbytes != sizeof(struct can_frame)) {
-        throw std::runtime_error("Incomplete CAN frame received");
-    }
-
-    return frame;
-}
-
-
-
-void CANBus::flush() {
-
-    std::lock_guard<std::mutex> lock(this->mutex_);
-    struct can_frame frame;
-    int nbytes;
-
-    if (!this->is_open()) return;
-
-    // Set the socket to non-blocking mode temporarily
-    int flags = fcntl(this->socket_, F_GETFL, 0);
-    fcntl(this->socket_, F_SETFL, flags | O_NONBLOCK);
-
-    // Read and discard frames until the buffer is empty
-    while ((nbytes = read(this->socket_, &frame, sizeof(struct can_frame))) > 0) {
-        // Discard the frame
-    }
-
-    // Restore original socket flags
-    fcntl(this->socket_, F_SETFL, flags);
-
-    if (nbytes < 0 && errno != EAGAIN) {
-        std::cerr << "Error flushing CAN buffer: " << strerror(errno) << std::endl;
-    } else {
-        std::cout << "CAN buffer flushed" << std::endl;
-    }
-}
-
-int CANBus::get_socket(void) {
-
-    std::lock_guard<std::mutex> lock(this->mutex_);
-    return this->socket_;
 }
 
 }

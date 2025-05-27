@@ -39,8 +39,6 @@ class CANBus {
         bool is_open(void);
         
 
-        struct can_frame toframe(const std::string& msg) const;
-        std::string tostring(const can_frame& frame) const;
 
     private:
         int socket_;
@@ -54,6 +52,8 @@ class CANBus {
 
 };
 
+struct can_frame toframe(const std::string& msg);
+std::string tostring(const can_frame& frame);
 
 }
 
