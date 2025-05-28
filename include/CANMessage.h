@@ -32,8 +32,8 @@ class CANMessage {
         bool is_extended_id() const;
         void set_extended(bool ext);
 
-        std::chrono::steady_clock::time_point get_timestamp() const;
-        void set_timestamp(std::chrono::steady_clock::time_point ts);
+        std::chrono::system_clock::time_point get_timestamp() const;
+        void set_timestamp(std::chrono::system_clock::time_point ts);
 
         struct can_frame to_can_frame() const;
         std::string to_string(bool show_timestamp = true) const;
@@ -44,7 +44,7 @@ class CANMessage {
         std::array<uint8_t, 8> data_{};
         uint8_t dlc_   = 0;
         bool extended_ = false;
-        std::chrono::steady_clock::time_point timestamp_;
+        std::chrono::system_clock::time_point timestamp_;
 };
 
 }

@@ -1,26 +1,26 @@
 cmake_minimum_required(VERSION 3.10)
-project(libcanbus)
+project(canbus)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 17)
 
 # Libreria dinamica
-add_library(canbus SHARED
+add_library(${PROJECT_NAME} SHARED
     src/CANBus.cpp
     src/CANMessage.cpp
 )
 
 # Header file
-target_include_directories(canbus PUBLIC
+target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(canbus PUBLIC -pthread)
+target_link_libraries(${PROJECT_NAME} PUBLIC -pthread)
 
 # Installazione
-install(TARGETS canbus
-    EXPORT canbusTargets
+install(TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}Targets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
@@ -29,10 +29,25 @@ install(TARGETS canbus
 
 install(DIRECTORY include/ DESTINATION include)
 
-install(EXPORT canbusTargets
-    FILE canbusConfig.cmake
-    NAMESPACE canbus::
-    DESTINATION lib/cmake/canbus
+install(EXPORT ${PROJECT_NAME}Targets
+    FILE ${PROJECT_NAME}Config.cmake
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION lib/cmake/${PROJECT_NAME}
+)
+
+# CAN sender executable
+add_executable(can_sender src/can_sender.cpp)
+target_include_directories(can_sender PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(can_sender ${PROJECT_NAME})
+
+# CAN receiver executable
+add_executable(can_receiver src/can_receiver.cpp)
+target_include_directories(can_receiver PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(can_receiver ${PROJECT_NAME})
+
+# Installazione
+install(TARGETS can_sender can_receiver
+    RUNTIME DESTINATION bin
 )
 
 # -------------------------
@@ -57,13 +72,13 @@ enable_testing()
 
 # Aggiungi test
 add_executable(test_CANMessage tests/test_CANMessage.cpp)
-target_link_libraries(test_CANMessage PRIVATE canbus gtest_main)
+target_link_libraries(test_CANMessage PRIVATE ${PROJECT_NAME} gtest_main)
 
 add_executable(test_CANBus tests/test_CANBus.cpp)
-target_link_libraries(test_CANBus PRIVATE canbus gtest_main)
+target_link_libraries(test_CANBus PRIVATE ${PROJECT_NAME} gtest_main)
 
 add_executable(test_CANBus_multithread tests/test_CANBus_multithread.cpp)
-target_link_libraries(test_CANBus_multithread PRIVATE canbus gtest_main)
+target_link_libraries(test_CANBus_multithread PRIVATE ${PROJECT_NAME} gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(test_CANMessage)

@@ -5,13 +5,13 @@ namespace canbus {
 CANMessage::CANMessage() = default;
 
 CANMessage::CANMessage(uint32_t id, const std::array<uint8_t, 8>& data, uint8_t dlc, bool ext)
-    : id_(id), data_(data), dlc_(dlc), extended_(ext), timestamp_(std::chrono::steady_clock::now()) {}
+    : id_(id), data_(data), dlc_(dlc), extended_(ext), timestamp_(std::chrono::system_clock::now()) {}
 
 CANMessage::CANMessage(const struct can_frame& frame)
     : id_(frame.can_id & CAN_EFF_MASK),
       dlc_(frame.can_dlc),
       extended_(frame.can_id & CAN_EFF_FLAG),
-      timestamp_(std::chrono::steady_clock::now()) {
+      timestamp_(std::chrono::system_clock::now()) {
     std::copy(std::begin(frame.data), std::begin(frame.data) + this->dlc_, this->data_.begin());
 }
 
@@ -47,11 +47,11 @@ void CANMessage::set_extended(bool ext) {
     this->extended_ = ext; 
 }
 
-std::chrono::steady_clock::time_point CANMessage::get_timestamp() const { 
+std::chrono::system_clock::time_point CANMessage::get_timestamp() const { 
     return this->timestamp_; 
 }
 
-void CANMessage::set_timestamp(std::chrono::steady_clock::time_point ts) { 
+void CANMessage::set_timestamp(std::chrono::system_clock::time_point ts) { 
     this->timestamp_ = ts; 
 }
 
@@ -109,7 +109,7 @@ CANMessage CANMessage::from_string(const std::string& str) {
         msg.data_[msg.dlc_++] = byte;
     }
 
-    msg.timestamp_ = std::chrono::steady_clock::now();
+    msg.timestamp_ = std::chrono::system_clock::now();
     return msg;
 }
 
