@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 # Libreria dinamica
 add_library(canbus SHARED
     src/CANBus.cpp
+    src/CANMessage.cpp
 )
 
 # Header file
@@ -55,9 +56,17 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 # Aggiungi test
+add_executable(test_CANMessage tests/test_CANMessage.cpp)
+target_link_libraries(test_CANMessage PRIVATE canbus gtest_main)
+
 add_executable(test_CANBus tests/test_CANBus.cpp)
 target_link_libraries(test_CANBus PRIVATE canbus gtest_main)
 
+add_executable(test_CANBus_multithread tests/test_CANBus_multithread.cpp)
+target_link_libraries(test_CANBus_multithread PRIVATE canbus gtest_main)
+
 include(GoogleTest)
+gtest_discover_tests(test_CANMessage)
 gtest_discover_tests(test_CANBus)
+gtest_discover_tests(test_CANBus_multithread)
 
