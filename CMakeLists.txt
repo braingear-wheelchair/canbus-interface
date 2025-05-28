@@ -27,7 +27,7 @@ install(TARGETS ${PROJECT_NAME}
     INCLUDES DESTINATION include
 )
 
-install(DIRECTORY include/ DESTINATION include)
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 install(EXPORT ${PROJECT_NAME}Targets
     FILE ${PROJECT_NAME}Config.cmake
