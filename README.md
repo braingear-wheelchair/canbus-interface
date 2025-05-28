@@ -1,8 +1,3 @@
-Here’s an updated `README.md` including a **Usage Example (C++ API)** section to demonstrate how to use the `CANBus` and `CANMessage` classes in code:
-
----
-
-```markdown
 # CANBus C++ Library
 
 A lightweight C++ library for interacting with Linux SocketCAN interfaces, including utilities for sending, receiving, and manipulating CAN frames. This project includes a shared library and command-line tools for testing CAN communication.
@@ -17,7 +12,7 @@ A lightweight C++ library for interacting with Linux SocketCAN interfaces, inclu
 - GoogleTest-based unit and multithreaded integration tests
 
 ## Directory Structure
-.
+<pre>.
 ├── include/
 │   ├── CANBus.h
 │   └── CANMessage.h
@@ -32,7 +27,7 @@ A lightweight C++ library for interacting with Linux SocketCAN interfaces, inclu
 │   └── test\_CANBus\_multithread.cpp
 ├── CMakeLists.txt
 └── README.md
-
+</pre>
 
 
 ## Requirements
