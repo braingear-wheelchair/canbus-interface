@@ -63,7 +63,7 @@ void CANBus::close() {
     }
 }
 
-bool CANBus::isOpen() const {
+bool CANBus::is_open() const {
     std::lock_guard<std::mutex> lock(mutex_);
     return is_open_;
 }

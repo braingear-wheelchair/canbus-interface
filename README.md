@@ -1,147 +1,133 @@
-# CANBus Interface Library
-
-A modern C++17 library for interfacing with the Linux CAN bus subsystem using raw sockets. This library provides a clean, high-level abstraction for sending and receiving CAN frames, with support for virtual CAN (vcan), timeout-based reception, and formatted string/frame conversion.
+Here’s an updated `README.md` including a **Usage Example (C++ API)** section to demonstrate how to use the `CANBus` and `CANMessage` classes in code:
 
 ---
 
-## 🔧 Features
+```markdown
+# CANBus C++ Library
 
-- Simple, object-oriented interface to CAN sockets
-- Automatic fallback to virtual CAN (`vcan`) if hardware interface fails
-- Frame encoding/decoding to and from string formats like `123#DEADBEEF`
-- Timeout support on receive operations
-- Automatic socket recovery on send failure
-- Optional non-blocking receive
-- Flush support for draining CAN receive buffer
-- Unit tests with Google Test (GTest)
-- Installable via CMake
+A lightweight C++ library for interacting with Linux SocketCAN interfaces, including utilities for sending, receiving, and manipulating CAN frames. This project includes a shared library and command-line tools for testing CAN communication.
 
----
+## Features
 
-## 📁 Project Structure
+- Object-oriented wrapper over Linux SocketCAN (`AF_CAN`, `SOCK_RAW`, `CAN_RAW`)
+- Support for standard and extended CAN frames
+- Timestamped message representation
+- Optional loopback for test environments (e.g., `vcan0`)
+- CLI tools for sending/receiving CAN messages
+- GoogleTest-based unit and multithreaded integration tests
+
+## Directory Structure
 
 ```
+
 .
 ├── include/
-│   └── CANBus.h              # Public interface
+│   ├── CANBus.h
+│   └── CANMessage.h
 ├── src/
-│   └── CANBus.cpp            # Implementation
+│   ├── CANBus.cpp
+│   ├── CANMessage.cpp
+│   ├── can\_sender.cpp
+│   └── can\_receiver.cpp
 ├── tests/
-│   └── test_CANBus.cpp       # Unit tests
-├── CMakeLists.txt            # Build & install configuration
+│   ├── test\_CANBus.cpp
+│   ├── test\_CANMessage.cpp
+│   └── test\_CANBus\_multithread.cpp
+├── CMakeLists.txt
 └── README.md
-```
 
----
+````
 
-## 🛠 Build & Install
+## Requirements
+
+- Linux system with SocketCAN support
+- CMake ≥ 3.10
+- GCC or Clang with C++17 support
+- Optional: `vcan` interface for testing
+- GoogleTest (automatically fetched by CMake)
+
+## Building
 
 ```bash
-# Clone the repository
-git clone <your-repo-url>
-cd canbus-interface
-
-# Create build directory
-mkdir build && cd build
-
-# Configure & build
+mkdir build
+cd build
 cmake ..
 make
+````
 
-# Run tests
-ctest
+## Usage (CLI)
 
-# Optionally install system-wide
-sudo make install
-```
-
----
-
-## 🧪 Running Unit Tests
-
-The project uses **GoogleTest** via CMake's `FetchContent`:
+### CAN Sender
 
 ```bash
-./test_CANBus
+./can_sender <interface> <id>#<hexdata> [-f frequency]
 ```
 
-Tests include:
-- Socket opening
-- String <-> Frame conversions
-- Message transmission
+* Example (single send):
+  `./can_sender vcan0 123#DEADBEEF`
 
----
+* Example (send repeatedly at 10Hz):
+  `./can_sender vcan0 123#DEADBEEF -f 10`
 
-## 🧵 Example Usage
+### CAN Receiver
+
+```bash
+./can_receiver <interface> [-F filter_id]
+```
+
+* Example (receive all):
+  `./can_receiver vcan0`
+
+* Example (filter by ID):
+  `./can_receiver vcan0 -F 123`
+
+## Usage Example (C++ API)
 
 ```cpp
 #include "CANBus.h"
+#include "CANMessage.h"
+#include <array>
 #include <iostream>
 
 int main() {
-    canbus::CANBus can(0); // use can0 or fallback to vcan0
+    using namespace canbus;
 
     try {
-        can.open();
+        CANBus bus("vcan0", true);  // Use loopback for testing
+        bus.open();
 
-        // Send a frame
-        can.send("123#DEADBEEF");
+        std::array<uint8_t, 8> data = {0xDE, 0xAD, 0xBE, 0xEF};
+        CANMessage message(0x123, data, 4, false);  // Standard ID
 
-        // Receive with timeout (1000ms)
-        auto frame = can.receive(1000);
-        std::cout << "Received: " << can.tostring(frame) << std::endl;
+        if (bus.send(message)) {
+            std::cout << "Message sent: " << message.to_string() << std::endl;
+        }
+
+        CANMessage received = bus.receive(1000);  // Wait up to 1s
+        std::cout << "Message received: " << received.to_string() << std::endl;
+
+        bus.close();
     } catch (const std::exception& e) {
-        std::cerr << "CAN Error: " << e.what() << std::endl;
+        std::cerr << "CAN error: " << e.what() << std::endl;
     }
 
     return 0;
 }
 ```
 
----
+## Testing
 
-## 📚 API Overview
+Run all unit and integration tests:
 
-### Class: `canbus::CANBus`
-
-| Method | Description |
-|--------|-------------|
-| `bool open()` | Opens the CAN interface socket |
-| `bool send(std::string)` | Sends frame from string |
-| `bool send(can_frame)` | Sends raw CAN frame |
-| `can_frame receive(int timeout_ms = -1)` | Receives a CAN frame, with optional timeout |
-| `std::string tostring(const can_frame&)` | Converts a frame to string |
-| `can_frame toframe(const std::string&)` | Converts a string to CAN frame |
-| `void flush()` | Empties the CAN buffer |
-
----
-
-## 📦 Installation Paths
-
-If installed via `make install`, the files will be placed in:
-
-- Headers: `/usr/include/`
-- Library: `/usr/lib/libcanbus.so`
-- CMake config: `/usr/lib/cmake/canbus/canbusConfig.cmake`
-
-You can then link the library in another project:
-
-```cmake
-find_package(canbus REQUIRED)
-target_link_libraries(my_app PRIVATE canbus::canbus)
+```bash
+cd build
+ctest
 ```
 
----
+## License
 
-## 🔧 Dependencies
+This project is licensed under the MIT License. See the `LICENSE` file for details.
 
-- Linux OS with SocketCAN support
-- C++17 compatible compiler
-- CMake 3.10+
-- GoogleTest (downloaded automatically)
+## Author
 
----
-
-## 📄 License
-
-MIT License — © 2025 Your Name
+Developed by \[Luca Tonin, UNIPD], 2025.

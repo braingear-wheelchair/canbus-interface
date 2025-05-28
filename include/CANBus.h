@@ -24,7 +24,7 @@ class CANBus {
 
         bool open();
         void close();
-        bool isOpen() const;
+        bool is_open() const;
         bool send(const CANMessage& message);
         CANMessage receive();
         CANMessage receive(int timeout_ms); 
