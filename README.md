@@ -18,7 +18,6 @@ A lightweight C++ library for interacting with Linux SocketCAN interfaces, inclu
 
 ## Directory Structure
 
-```
 <pre>
 .
 ├── include/
@@ -36,7 +35,7 @@ A lightweight C++ library for interacting with Linux SocketCAN interfaces, inclu
 ├── CMakeLists.txt
 └── README.md
 </pre>
-````
+
 
 ## Requirements
 
