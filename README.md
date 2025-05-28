@@ -19,7 +19,7 @@ A lightweight C++ library for interacting with Linux SocketCAN interfaces, inclu
 ## Directory Structure
 
 ```
-
+<pre>
 .
 ├── include/
 │   ├── CANBus.h
@@ -35,7 +35,7 @@ A lightweight C++ library for interacting with Linux SocketCAN interfaces, inclu
 │   └── test\_CANBus\_multithread.cpp
 ├── CMakeLists.txt
 └── README.md
-
+</pre>
 ````
 
 ## Requirements
