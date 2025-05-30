@@ -40,10 +40,10 @@ int main(int argc, char* argv[]) {
         data[i] = static_cast<uint8_t>(std::stoul(data_str.substr(2 * i, 2), nullptr, 16));
     }
 
-    canbus::CANMessage msg(id, data, dlc, false);
+    canbus::CANMessage msg(id, data, dlc, id > 0x7FF);
 
     try {
-        canbus::CANBus bus(interface, false);
+        canbus::CANBus bus(interface, true, true);
         bus.open();
 
         if (frequency > 0) {

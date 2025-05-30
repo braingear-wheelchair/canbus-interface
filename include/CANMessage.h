@@ -16,10 +16,12 @@ namespace canbus {
 class CANMessage {
 
     public:
-        CANMessage();
+        CANMessage(void);
         CANMessage(uint32_t id, const std::array<uint8_t, 8>& data, uint8_t dlc, bool ext = false);
         explicit CANMessage(const struct can_frame& frame);
 
+        bool empty(void) const;
+        
         uint32_t get_id() const;
         void set_id(uint32_t value);
 

@@ -113,4 +113,8 @@ CANMessage CANMessage::from_string(const std::string& str) {
     return msg;
 }
 
+bool CANMessage::empty(void) const {
+    return this->dlc_ == 0 && this->id_ == 0;
+}
+
 }

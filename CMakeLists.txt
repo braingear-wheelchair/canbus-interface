@@ -51,7 +51,7 @@ install(TARGETS can_sender can_receiver
 )
 
 # -------------------------
-#      SEZIONE TEST
+#         TEST
 # -------------------------
 
 # Set policy per evitare warning (CMP0135)

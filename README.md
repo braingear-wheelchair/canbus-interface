@@ -1,25 +1,22 @@
-Here’s an updated `README.md` including a **Usage Example (C++ API)** section to demonstrate how to use the `CANBus` and `CANMessage` classes in code:
-
----
-
-```markdown
 # CANBus C++ Library
 
 A lightweight C++ library for interacting with Linux SocketCAN interfaces, including utilities for sending, receiving, and manipulating CAN frames. This project includes a shared library and command-line tools for testing CAN communication.
 
 ## Features
 
-- Object-oriented wrapper over Linux SocketCAN (`AF_CAN`, `SOCK_RAW`, `CAN_RAW`)
-- Support for standard and extended CAN frames
-- Timestamped message representation
-- Optional loopback for test environments (e.g., `vcan0`)
-- CLI tools for sending/receiving CAN messages
-- GoogleTest-based unit and multithreaded integration tests
+* Object-oriented wrapper over Linux SocketCAN (`AF_CAN`, `SOCK_RAW`, `CAN_RAW`)
+* Support for standard and extended CAN frames
+* Timestamped message representation
+* Optional loopback for test environments (e.g., `vcan0`)
+* CLI tools for sending/receiving CAN messages
+* GoogleTest-based unit and multithreaded integration tests
+* Configurable constructor with auto-open
+* Non-blocking and timeout-based receive support
+* Utility method to check if a CAN message is empty
 
 ## Directory Structure
 
 ```
-
 .
 ├── include/
 │   ├── CANBus.h
@@ -27,24 +24,23 @@ A lightweight C++ library for interacting with Linux SocketCAN interfaces, inclu
 ├── src/
 │   ├── CANBus.cpp
 │   ├── CANMessage.cpp
-│   ├── can\_sender.cpp
-│   └── can\_receiver.cpp
+│   ├── can_sender.cpp
+│   └── can_receiver.cpp
 ├── tests/
-│   ├── test\_CANBus.cpp
-│   ├── test\_CANMessage.cpp
-│   └── test\_CANBus\_multithread.cpp
+│   ├── test_CANBus.cpp
+│   ├── test_CANMessage.cpp
+│   └── test_CANBus_multithread.cpp
 ├── CMakeLists.txt
 └── README.md
-
-````
+```
 
 ## Requirements
 
-- Linux system with SocketCAN support
-- CMake ≥ 3.10
-- GCC or Clang with C++17 support
-- Optional: `vcan` interface for testing
-- GoogleTest (automatically fetched by CMake)
+* Linux system with SocketCAN support
+* CMake ≥ 3.10
+* GCC or Clang with C++17 support
+* Optional: `vcan` interface for testing
+* GoogleTest (automatically fetched by CMake)
 
 ## Building
 
@@ -53,7 +49,7 @@ mkdir build
 cd build
 cmake ..
 make
-````
+```
 
 ## Usage (CLI)
 
@@ -63,11 +59,9 @@ make
 ./can_sender <interface> <id>#<hexdata> [-f frequency]
 ```
 
-* Example (single send):
-  `./can_sender vcan0 123#DEADBEEF`
+* Example (single send): `./can_sender vcan0 123#DEADBEEF`
 
-* Example (send repeatedly at 10Hz):
-  `./can_sender vcan0 123#DEADBEEF -f 10`
+* Example (send repeatedly at 10Hz): `./can_sender vcan0 123#DEADBEEF -f 10`
 
 ### CAN Receiver
 
@@ -75,11 +69,9 @@ make
 ./can_receiver <interface> [-F filter_id]
 ```
 
-* Example (receive all):
-  `./can_receiver vcan0`
+* Example (receive all): `./can_receiver vcan0`
 
-* Example (filter by ID):
-  `./can_receiver vcan0 -F 123`
+* Example (filter by ID): `./can_receiver vcan0 -F 123`
 
 ## Usage Example (C++ API)
 
@@ -93,8 +85,7 @@ int main() {
     using namespace canbus;
 
     try {
-        CANBus bus("vcan0", true);  // Use loopback for testing
-        bus.open();
+        CANBus bus("vcan0", true, true, true);  // auto_open = true, loopback = true, receive_own_msgs = true
 
         std::array<uint8_t, 8> data = {0xDE, 0xAD, 0xBE, 0xEF};
         CANMessage message(0x123, data, 4, false);  // Standard ID
@@ -103,10 +94,14 @@ int main() {
             std::cout << "Message sent: " << message.to_string() << std::endl;
         }
 
-        CANMessage received = bus.receive(1000);  // Wait up to 1s
-        std::cout << "Message received: " << received.to_string() << std::endl;
+        // Non-blocking receive
+        CANMessage received = bus.receive(0);
+        if (!received.empty()) {
+            std::cout << "Message received: " << received.to_string() << std::endl;
+        } else {
+            std::cout << "No message available.\n";
+        }
 
-        bus.close();
     } catch (const std::exception& e) {
         std::cerr << "CAN error: " << e.what() << std::endl;
     }
